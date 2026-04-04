@@ -130,6 +130,10 @@
   opacity: 0.8;
 }
 
+.refresh-balance-btn {
+  font-size: 20px;
+}
+
 /* 티켓 표시 섹션 */
 .ticket-section {
   display: flex;
@@ -137,10 +141,18 @@
   gap: 10px;
 }
 
+.ticket-action-group {
+  display: flex;
+  gap: 12px;
+  align-items: stretch; /* 높이를 동일하게 맞춤 */
+}
+
 .ticket-display {
+  flex: 1; /* 남은 공간 차지 */
   background-color: #ffffff;
-  color: #5b4df5; /* 보라색 텍스트로 강조 */
-  padding: 18px;
+  color: #5b4df5;
+  /* 보라색 텍스트로 강조 */
+  padding: 14px 18px;
   border-radius: var(--radius-md);
   text-align: center;
   box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
@@ -148,7 +160,8 @@
   justify-content: center;
   align-items: baseline;
   gap: 12px;
-  border: 1px dashed rgba(91, 77, 245, 0.3); /* 티켓 느낌을 주기 위한 점선 테두리 */
+  border: 1px dashed rgba(91, 77, 245, 0.3);
+  /* 티켓 느낌을 주기 위한 점선 테두리 */
 }
 
 .ticket-count {
@@ -162,6 +175,29 @@
   opacity: 0.8;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.buy-ticket-btn {
+  background-color: #5b4df5; /* 보라색 테마 */
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 0 15px;
+  border-radius: var(--radius-md);
+  transition: all var(--transition);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+}
+
+.buy-ticket-btn:hover:not(:disabled) {
+  background-color: #6c5eff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(91, 77, 245, 0.4);
+}
+
+.buy-ticket-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* 지갑 주소 박스 (하얀 버튼 스타일) */

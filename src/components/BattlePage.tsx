@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { usePrivy } from '@privy-io/react-auth'
+import { useSendTransaction } from 'wagmi'
+import { parseEther } from 'viem'
 import './BattlePage.css'
 import type { CharacterData } from '../types/character'
 import { adjudicateBattle } from '../lib/openai'
+
+// 관리자 지갑 주소
+const ADMIN_WALLET = '0x5Fb66a14a77517519a8b0cb40B333F42e4718A65'
 
 interface BattlePageProps {
   character: CharacterData
@@ -13,6 +18,8 @@ interface BattlePageProps {
 
 const BattlePage: React.FC<BattlePageProps> = ({ character, onBack }) => {
   const { authenticated } = usePrivy()
+  const { sendTransactionAsync } = useSendTransaction()
+  const [isTransacting, setIsTransacting] = useState(false)
   const [rank, setRank] = useState<number>(1)
 
   // 배틀 상태 관리
@@ -77,14 +84,26 @@ const BattlePage: React.FC<BattlePageProps> = ({ character, onBack }) => {
     if (battleState !== 'idle' && !isFast) return
     if (battleState === 'battling') return // 배틀 중에는 중복 불가
 
-    // --- [랭크 티켓 체크 로직 추가] ---
+    // --- [랭크 티켓 체크 로직 수정: 결제 연동] ---
     if (!isPracticeMode && !localStats.rank_ticket) {
       const confirmPurchase = window.confirm(
-        "랭크 게임을 플레이 하기 위해선 입장권이 필요합니다!\n입장권은 최초 1회 구매시 계속해서 랭크 게임 플레이가 가능합니다.\n구매하시겠습니까?"
+        "랭크 게임을 플레이 하기 위해선 '영구 입장권'이 필요합니다!\n최초 1회 구매(0.1 MON) 시 이 캐릭터는 계속해서 랭크 게임 플레이가 가능합니다.\n구매하시겠습니까?"
       );
 
       if (confirmPurchase) {
         try {
+          setIsTransacting(true)
+          setToastMessage("입장권 결제를 위한 지갑 승인을 대기 중입니다...")
+          setShowToast(true)
+
+          const tx = await sendTransactionAsync({
+            to: ADMIN_WALLET as `0x${string}`,
+            value: parseEther('0.1'),
+          })
+
+          console.log('입장권 결제 성공:', tx)
+
+          // 2. DB 업데이트 (영구 입장권 활성화)
           const { error } = await supabase
             .from('characters')
             .update({ rank_ticket: true })
@@ -94,12 +113,14 @@ const BattlePage: React.FC<BattlePageProps> = ({ character, onBack }) => {
 
           // 티켓 구매 성공 처리
           setLocalStats(prev => ({ ...prev, rank_ticket: true }));
-          setToastMessage("티켓 구매에 성공했습니다. 승리를 기원합니다!");
+          setToastMessage("영구 입장권 구매에 성공했습니다! 랭크 배틀을 시작합니다.");
           setShowToast(true);
-          return; // 구매 직후에는 배틀을 바로 시작하지 않고 Toast를 보여줌 (사용자 흐름상 다시 클릭 유도)
+          setIsTransacting(false)
+          // 구매 직후 바로 배틀 매칭 로직으로 넘어감
         } catch (err: any) {
           console.error("티켓 구매 에러:", err);
-          alert("티켓 구매 중 오류가 발생했습니다.");
+          alert("결제가 취소되었거나 오류가 발생했습니다.");
+          setIsTransacting(false)
           return;
         }
       } else {
@@ -108,10 +129,42 @@ const BattlePage: React.FC<BattlePageProps> = ({ character, onBack }) => {
     }
 
     const battleStartTime = new Date().toISOString()
-    setBattleState('battling')
-    setShowResult(false) // 새로운 배틀 시작 시 이전 결과 숨김
+
+    // 배틀 시작 시 이전 결과 숨기기
+    setShowResult(false)
 
     try {
+      // 1. 토큰 결제 로직 추가 (연습 모드가 아닐 때만)
+      if (!isPracticeMode) {
+        setIsTransacting(true)
+        setToastMessage("지갑에서 트랜잭션을 승인해주세요...")
+        setShowToast(true)
+
+        try {
+          // 금액 설정: 빠른 배틀 0.05 MON, 일반 랭크 0.1 MON
+          const amount = isFast ? '0.05' : '0.1'
+
+          const tx = await sendTransactionAsync({
+            to: ADMIN_WALLET as `0x${string}`,
+            value: parseEther(amount),
+          })
+
+          console.log('트랜잭션 성공:', tx)
+          setToastMessage(`결제 성공! ${amount} MON이 전송되었습니다.`)
+          setShowToast(true)
+        } catch (txErr) {
+          console.error('트랜잭션 거부 또는 실패:', txErr)
+          setToastMessage("결제가 취소되었거나 실패했습니다.")
+          setShowToast(true)
+          setBattleState('idle')
+          setIsTransacting(false)
+          return
+        }
+        setIsTransacting(false)
+      }
+
+      setBattleState('battling')
+
       // (중략 - 기존 매칭 로직)
       // 1. 랜덤 상대 캐릭터 조회 (본인이 아니며 랭크 티켓을 보유한 캐릭터)
       const { count: totalCount, error: countError } = await supabase
@@ -376,9 +429,11 @@ const BattlePage: React.FC<BattlePageProps> = ({ character, onBack }) => {
     const fetchRank = async () => {
       try {
         // 순위 산출: (TP가 나보다 높은 캐릭터 수) + (TP는 같고 나보다 먼저 생성된 캐릭터 수) + 1
+        // 랭크 티켓(rank_ticket)을 보유한 캐릭터들 중에서만 집계
         const { count, error } = await supabase
           .from('characters')
           .select('*', { count: 'exact', head: true })
+          .eq('rank_ticket', true) // 랭크 티켓 보유자 한정
           .or(`tp.gt.${localStats.tp},and(tp.eq.${localStats.tp},created_at.lt.${character.created_at})`)
 
         if (!error && count !== null) {
@@ -514,7 +569,15 @@ const BattlePage: React.FC<BattlePageProps> = ({ character, onBack }) => {
                   {battleResult === 'challenger_win' ? '👑' : battleResult === 'defender_win' ? '💀' : '🤝'}
                 </span>
                 <span className={`result-icon-text ${battleResult === 'defender_win' ? 'result-icon-text--lose' : ''}`}>
-                  {battleResult === 'challenger_win' ? '승리' : battleResult === 'defender_win' ? '패배' : '무승부'}
+                  {!isPracticeMode ? (
+                    battleResult === 'challenger_win' ? '총 0.2 MON 획득 (베팅금 0.1 복구 + 보상 0.1)' :
+                    battleResult === 'defender_win' ? '0.1 MON 상실 (베팅금 차감)' :
+                    '0.1 MON 반환'
+                  ) : (
+                    battleResult === 'challenger_win' ? '승리!' :
+                    battleResult === 'defender_win' ? '패배' :
+                    '무승부'
+                  )}
                 </span>
               </div>
             </div>
@@ -526,9 +589,14 @@ const BattlePage: React.FC<BattlePageProps> = ({ character, onBack }) => {
           <button
             className="btn-battle"
             onClick={() => handleStartBattle()}
-            disabled={battleState !== 'idle'}
+            disabled={battleState !== 'idle' || isTransacting}
           >
-            {battleState === 'battling' ? (
+            {isTransacting ? (
+              <span className="battle-loading">
+                <span className="loader-spinner"></span>
+                지갑 승인 중..
+              </span>
+            ) : battleState === 'battling' ? (
               <span className="battle-loading">
                 <span className="loader-spinner"></span>
                 배틀 진행 중..
@@ -547,11 +615,11 @@ const BattlePage: React.FC<BattlePageProps> = ({ character, onBack }) => {
               <button
                 className="btn-battle-fast"
                 onClick={() => handleStartBattle(true)}
-                disabled={battleState === 'battling'}
+                disabled={battleState === 'battling' || isTransacting}
               >
                 휴식 없는 배틀 시작
                 <img src="/MON_Token.png" className="token-icon" alt="MON Token" />
-                1 MON
+                0.05 MON
               </button>
 
               <button
