@@ -1,0 +1,145 @@
+.ranking-page-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 19px 120px;
+  /* 하단바를 고려하여 하단 여백 대폭 추가 */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 티어 선택 탭 */
+.tier-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.tier-tab {
+  flex: 1;
+  padding: 12px 0;
+  border: 2px solid var(--bg-input-border);
+  background-color: var(--bg-secondary);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.tier-tab:hover {
+  background-color: var(--bg-input);
+}
+
+.tier-tab--active {
+  border-color: var(--color-accent);
+  background-color: rgba(240, 180, 41, 0.1);
+  color: var(--color-accent);
+}
+
+/* 랭킹 리스트 */
+.ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ranking-item {
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform var(--transition);
+}
+
+.ranking-item:hover {
+  transform: translateY(-2px);
+}
+
+/* 상위 3위 강조 */
+.ranking-item--1 {
+  border: 2px solid #2EE6D6;
+  /* red */
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(240, 180, 41, 0.05) 100%);
+}
+
+.ranking-item--2 {
+  border: 2px solid #FF6EC7;
+  /* Silver */
+}
+
+.ranking-item--3 {
+  border: 2px solid #FFD60A;
+  /* Lime/Bronze accent */
+}
+
+.ranking-item__rank {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-text-secondary);
+  min-width: 45px;
+}
+
+.ranking-item--1 .ranking-item__rank {
+  color: #2EE6D6;
+}
+
+.ranking-item--2 .ranking-item__rank {
+  color: #FF6EC7;
+}
+
+.ranking-item--3 .ranking-item__rank {
+  color: #FFD60A;
+}
+
+.ranking-item__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ranking-item__name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.ranking-item__stats {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.ranking-item__tp {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.tp-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-accent);
+  text-transform: uppercase;
+}
+
+.tp-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+/* 상태 메시지 */
+.ranking-loading,
+.ranking-empty {
+  text-align: center;
+  padding: 60px 0;
+  color: var(--color-text-secondary);
+  font-size: 16px;
+}

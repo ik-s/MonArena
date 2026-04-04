@@ -1,0 +1,170 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* --- 모나드 보라 테마 (기본 테마로 고정) --- */
+  --bg-primary: #836ef9; /* 주 보라색 배경 */
+  --bg-secondary: #9281ff; /* 보라색 위 강조 배경 */
+  --bg-card: rgba(255, 255, 255, 0.25); /* 투명한 하얀색 카드 */
+  --bg-input: rgba(255, 255, 255, 0.15); /* 투명한 하얀색 입력 필드 */
+  --bg-input-border: rgba(255, 255, 255, 0.45);
+  --bg-nav: rgba(131, 110, 249, 0.6); /* 반투명한 보라색 네비게이션 */
+  --color-text-primary: #ffffff; /* 일반 텍스트: 하얀색 */
+  --color-text-secondary: rgba(255, 255, 255, 0.95);
+  --color-text-muted: rgba(255, 255, 255, 0.6);
+  --color-accent: #ffffff; /* 포인트: 하얀색 */
+  --color-accent-hover: #f0f0f0;
+  --color-btn-active: rgba(255, 255, 255, 0.3);
+  --color-btn-inactive: rgba(255, 255, 255, 0.15);
+  --color-btn-generate: #ffffff; /* 버튼 배경: 하얀색 */
+  --color-btn-generate-text: #5b4df5; /* 버튼 텍스트: 보라색 */
+  --color-divider: rgba(255, 255, 255, 0.2);
+  --font-main: 'Noto Sans KR', sans-serif;
+  --radius-sm: 7px;
+  --radius-md: 10px;
+  --radius-lg: 10px;
+  --transition: 0.2s ease;
+}
+
+html,
+body {
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-main);
+  font-size: 30px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary);
+}
+
+button {
+  font-family: var(--font-main);
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+input,
+textarea {
+  font-family: var(--font-main);
+  outline: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Privy 모달의 'Recent' 뱃지 등 내부 styled-components 오버라이드 */
+div[role="dialog"] span[class*="StyledChip"],
+#privy-dialog span[class*="StyledChip"] {
+  font-size: 0.5rem !important;
+}
+
+/* --- 공통 컴포넌트 테마 적용 --- */
+
+/* 하단 바 (BottomNav) */
+.bottom-nav {
+  background-color: rgba(115, 94, 224, 0.4) !important;
+  backdrop-filter: blur(15px);
+  border-top-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.bottom-nav__item--active {
+  color: #ffffff !important;
+}
+
+.bottom-nav__item {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* 지갑 박스 및 잔액 표시 */
+.wallet-box,
+.balance-display {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  color: #5b4df5 !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.logout-btn {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  color: #ffffff !important;
+}
+
+.logout-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.save-btn {
+  background-color: #ffffff !important;
+  color: #5b4df5 !important;
+}
+
+/* --- 캐릭터 리스트 스타일 --- */
+.character-item {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--bg-input-border) !important;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.character-item:hover {
+  background-color: rgba(255, 255, 255, 0.35) !important;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.character-item__badge {
+  background-color: #ffffff !important;
+  color: #5b4df5 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.character-item__name {
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.character-item__desc {
+  color: var(--color-text-secondary) !important;
+  font-weight: 500;
+}
+
+.add-character-btn {
+  background-color: #ffffff !important;
+  color: #5b4df5 !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.add-character-btn__count {
+  background-color: #f0eeff !important;
+  color: #5b4df5 !important;
+}
+
+.icon-btn {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.icon-btn:hover {
+  color: #ffffff !important;
+}

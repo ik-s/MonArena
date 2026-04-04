@@ -1,0 +1,78 @@
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background-color: var(--bg-nav);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px 0;
+  flex-shrink: 0;
+}
+
+/* 탭 요소 래퍼: 42rem 기준으로 가운데 정렬, 3열 그리드 배치 */
+.bottom-nav__inner {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 42rem;
+  margin: 0 auto;
+  width: 100%;
+  gap: 0;
+}
+
+.bottom-nav__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 7px 5px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  transition: color var(--transition);
+  position: relative;
+}
+
+.bottom-nav__item:hover {
+  color: var(--color-text-secondary);
+}
+
+.bottom-nav__item--active {
+  color: var(--color-text-primary);
+}
+
+.bottom-nav__item--active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 29px;
+  height: 2.5px;
+  background-color: var(--color-text-primary);
+  border-radius: 0 0 2.5px 2.5px;
+}
+
+.bottom-nav__icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  transition: opacity var(--transition), filter var(--transition);
+  opacity: 0.6; /* 기본 비활성 상태 */
+}
+
+.bottom-nav__item--active .bottom-nav__icon {
+  opacity: 1; /* 활성 상태 */
+  filter: brightness(1.2);
+}
+
+.bottom-nav__label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+}

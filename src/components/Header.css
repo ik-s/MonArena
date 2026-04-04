@@ -1,0 +1,16 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 29px 17px;
+  background-color: var(--bg-primary);
+  /* 컴포넌트가 부모 영역(최대 42rem)에 꽉 차도록 100%로 변경 */
+  width: 100%;
+}
+
+.header__title {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.5px;
+}
