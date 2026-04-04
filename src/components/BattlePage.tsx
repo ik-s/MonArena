@@ -24,6 +24,10 @@ const BattlePage: React.FC<BattlePageProps> = ({ character, onBack }) => {
   const [adjudication, setAdjudication] = useState<any>(null) // 아카샤의 상세 판정 데이터
   const [isPracticeMode, setIsPracticeMode] = useState<boolean>(false) // 연습 모드 여부
 
+  // 토스트 메시지 상태
+  const [showToast, setShowToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+
   // 프론트 단 즉각 업데이트를 위한 로컬 전적 상태 추가
   const [localStats, setLocalStats] = useState({
     battle_count: character.battle_count,
@@ -36,7 +40,18 @@ const BattlePage: React.FC<BattlePageProps> = ({ character, onBack }) => {
     practice_win_count: character.practice_win_count || 0,
     practice_lose_count: character.practice_lose_count || 0,
     practice_draw_count: character.practice_draw_count || 0,
+    rank_ticket: character.rank_ticket || false, // 티켓 보유 여부 추가
   })
+
+  // 토스트 메시지 자동 소멸 로직
+  useEffect(() => {
+    if (showToast) {
+      const timer = setTimeout(() => {
+        setShowToast(false)
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [showToast])
 
   // 쿨다운 타이머 처리
   useEffect(() => {
@@ -62,19 +77,51 @@ const BattlePage: React.FC<BattlePageProps> = ({ character, onBack }) => {
     if (battleState !== 'idle' && !isFast) return
     if (battleState === 'battling') return // 배틀 중에는 중복 불가
 
+    // --- [랭크 티켓 체크 로직 추가] ---
+    if (!isPracticeMode && !localStats.rank_ticket) {
+      const confirmPurchase = window.confirm(
+        "랭크 게임을 플레이 하기 위해선 입장권이 필요합니다!\n입장권은 최초 1회 구매시 계속해서 랭크 게임 플레이가 가능합니다.\n구매하시겠습니까?"
+      );
+
+      if (confirmPurchase) {
+        try {
+          const { error } = await supabase
+            .from('characters')
+            .update({ rank_ticket: true })
+            .eq('character_id', character.character_id);
+
+          if (error) throw error;
+
+          // 티켓 구매 성공 처리
+          setLocalStats(prev => ({ ...prev, rank_ticket: true }));
+          setToastMessage("티켓 구매에 성공했습니다. 승리를 기원합니다!");
+          setShowToast(true);
+          return; // 구매 직후에는 배틀을 바로 시작하지 않고 Toast를 보여줌 (사용자 흐름상 다시 클릭 유도)
+        } catch (err: any) {
+          console.error("티켓 구매 에러:", err);
+          alert("티켓 구매 중 오류가 발생했습니다.");
+          return;
+        }
+      } else {
+        return; // 구매 거부 시 중단
+      }
+    }
+
     const battleStartTime = new Date().toISOString()
     setBattleState('battling')
     setShowResult(false) // 새로운 배틀 시작 시 이전 결과 숨김
 
     try {
-      // 1. 랜덤 상대 캐릭터 조회 (본인 제외)
+      // (중략 - 기존 매칭 로직)
+      // 1. 랜덤 상대 캐릭터 조회 (본인이 아니며 랭크 티켓을 보유한 캐릭터)
       const { count: totalCount, error: countError } = await supabase
         .from('characters')
         .select('*', { count: 'exact', head: true })
         .neq('owner_wallet_address', character.owner_wallet_address) // 현재 사용자의 모든 캐릭터 제외
+        .eq('rank_ticket', true) // 랭크 티켓 보유 여부 확인
 
       if (countError || totalCount === null || totalCount === 0) {
-        throw new Error("상대 캐릭터를 찾을 수 없습니다. (캐릭터가 부족합니다)")
+        throw new Error("랭크 게임 입장권을 보유한 상대 캐릭터를 찾을 수 없습니다.")
       }
 
       const randomIndex = Math.floor(Math.random() * totalCount)
@@ -82,6 +129,7 @@ const BattlePage: React.FC<BattlePageProps> = ({ character, onBack }) => {
         .from('characters')
         .select('*')
         .neq('owner_wallet_address', character.owner_wallet_address) // 현재 사용자의 모든 캐릭터 제외
+        .eq('rank_ticket', true) // 랭크 티켓 보유 여부 확인
         .range(randomIndex, randomIndex)
         .single()
 
@@ -92,7 +140,7 @@ const BattlePage: React.FC<BattlePageProps> = ({ character, onBack }) => {
       setOpponent(opponentData)
 
       // 1.5초 간 배틀 진행 연출 (사용자 요청으로 3초에서 단축)
-      await new Promise(resolve => setTimeout(resolve, 3000))
+      await new Promise(resolve => setTimeout(resolve, 1500))
 
       // 2. 승패 결정 ('아카샤' AI 판정)
       const adj = await adjudicateBattle(character, opponentData);
@@ -107,7 +155,13 @@ const BattlePage: React.FC<BattlePageProps> = ({ character, onBack }) => {
         if (isPracticeMode) {
           // --- [연습 모드 로직] ---
           const practiceUpdate = {
-            ...localStats,
+            battle_count: localStats.battle_count,
+            win_count: localStats.win_count,
+            lose_count: localStats.lose_count,
+            draw_count: localStats.draw_count,
+            tp: localStats.tp,
+            rank_tier: localStats.rank_tier,
+            rank_ticket: localStats.rank_ticket,
             practice_battle_count: localStats.practice_battle_count + 1,
             practice_win_count: localStats.practice_win_count + (adj.result === 'challenger_win' ? 1 : 0),
             practice_lose_count: localStats.practice_lose_count + (adj.result === 'defender_win' ? 1 : 0),
@@ -127,7 +181,7 @@ const BattlePage: React.FC<BattlePageProps> = ({ character, onBack }) => {
 
           if (updateError) throw updateError;
 
-          // 배틀 로그 저장 (is_practice: true)
+          // (중략 - 배틀 로그 저장 로직)
           const ensureUser = async (wallet: string) => {
             const { data, error } = await supabase
               .from('users')
@@ -225,6 +279,7 @@ const BattlePage: React.FC<BattlePageProps> = ({ character, onBack }) => {
             practice_win_count: localStats.practice_win_count,
             practice_lose_count: localStats.practice_lose_count,
             practice_draw_count: localStats.practice_draw_count,
+            rank_ticket: localStats.rank_ticket, // 티켓 필드 유지
           }
 
           const opUpdate = {
@@ -248,7 +303,7 @@ const BattlePage: React.FC<BattlePageProps> = ({ character, onBack }) => {
             throw new Error("데이터베이스 업데이트에 실패했습니다. (SQL 컬럼 누락 여부를 확인해주세요)");
           }
 
-          // 4. battles 테이블에 상세 로그 기록 (Akasha Adjudication)
+          // (중략 - 배틀 로그 저장 로직)
           try {
             // 유저가 프로필을 저장하지 않았을 수도 있으므로, 배틀 참여자들의 upsert를 통해 user_id 확보 (wallet_address 기준)
             const ensureUser = async (wallet: string) => {
@@ -355,6 +410,13 @@ const BattlePage: React.FC<BattlePageProps> = ({ character, onBack }) => {
 
   return (
     <div className="battle-page-wrapper">
+      {/* 토스트 알림 메시지 */}
+      {showToast && (
+        <div className="battle-toast">
+          {toastMessage}
+        </div>
+      )}
+
       <div className="battle-card">
         {/* 헤더 */}
         <div className="battle-card__header">

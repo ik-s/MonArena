@@ -15,5 +15,6 @@ export interface CharacterData {
   practice_lose_count: number
   practice_draw_count: number
   practice_battle_count: number
+  rank_ticket?: boolean // 랭크 게임 입장 티켓 보유 여부
   [key: string]: any
 }

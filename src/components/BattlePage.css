@@ -161,7 +161,7 @@
   border-radius: var(--radius-md);
   font-size: 16px;
   font-weight: 700;
-  transition: transform var(--transition), box-shadow var(--transition), background-color var(--transition);
+  /* transition: transform var(--transition), box-shadow var(--transition), background-color var(--transition); */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -202,12 +202,12 @@
 }
 
 .btn-battle {
-  background-color: var(--bg-input-border);
+  background-color: rgba(232, 205, 250, 0.45);
   color: var(--color-text-primary);
 }
 
 .btn-battle:hover {
-  background-color: #636678;
+  background-color: var(--bg-input-border);
 }
 
 .btn-battle-expired {
@@ -222,13 +222,13 @@
 }
 
 .btn-battle-fast {
-  background-color: #514421;
+  background-color: #c1be3c;
   /* 진한 호박색/골드 */
   color: var(--color-accent);
 }
 
 .btn-battle-fast:hover {
-  background-color: #66562a;
+  background-color: #cac975;
 }
 
 .token-icon {
@@ -268,7 +268,7 @@
 .btn-battle-practice {
   background-color: #6ab987;
   /* Green 400 */
-  color: #1a1c23;
+  color: var(--color-text-primary);
   /* 어두운 텍스트 */
   width: 100%;
   padding: 16px 0;
@@ -522,4 +522,35 @@
   color: var(--color-text-primary);
   margin-left: 8px;
   white-space: nowrap;
+}
+
+/* 토스트 메시지 스타일 */
+.battle-toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #ffffff;
+  color: #5b4df5;
+  padding: 16px 24px;
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+  font-size: 16px;
+  font-weight: 700;
+  z-index: 1000;
+  animation: fadeInDown 0.4s ease-out;
+  text-align: center;
+  min-width: 300px;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 }

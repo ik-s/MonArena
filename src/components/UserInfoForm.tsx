@@ -232,6 +232,14 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({ onLogout }) => {
             </div>
           </div>
 
+          <div className="ticket-section" style={{ marginTop: '20px' }}>
+            <label className="user-info-label">보유한 티켓</label>
+            <div className="ticket-display">
+              <span className="ticket-count">3</span>
+              <span className="ticket-label">Rank Tickets</span>
+            </div>
+          </div>
+
           {/* 로그아웃 버튼 */}
           <button className="logout-btn" onClick={onLogout}>
             <img src={logoutIcon} alt="" className="logout-btn__icon" />
